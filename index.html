@@ -5,13 +5,20 @@
     <title>API Hack - Google Maps + Yelp</title>
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
     <link rel="stylesheet" type="text/css" href="css/reset.css"/>
-    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?&sensor=true"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-    <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript" src="js/controller.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
 </head>
 <body>
+    <div id="user-input-search">
+        <form>
+            <label>What are you looking for?<input></label>
+            <label>Search Radius<input></label>
+            <input type="submit">
+        </form>
+    </div>
     <div id="map-canvas"></div>
 </body>
 </html>

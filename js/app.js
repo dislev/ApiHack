@@ -2,43 +2,44 @@
  * Created by Soundwave on 2/10/14.
  */
 
-var googleApi = (function() {
+function getLocation(){
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(getPos, onError);
+    }
 
-    var browserSupportFlag =  new Boolean();
+    function getPos(position)
+    {
+        googleMap(position.coords.latitude, position.coords.longitude);
+        alert(position.coords.latitude +", "+ position.coords.longitude)
+    }
+
+    function onError()
+    {
+        alert("Brower did not support geolocation");
+    }
+ }
+
+function googleMap(latitude, longitude){
+
+    var userLatLng = new google.maps.LatLng(latitude, longitude);
+
     var myOptions = {
-        zoom: 6,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-
-    function googleMaps(){
-        var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-        Geolocation(map);
-    };
-
-    function Geolocation(map){
-        if(navigator.geolocation) {
-            browserSupportFlag = true;
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var initPosition = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
-                map.setCenter(initPosition);
-            });
-        };
-    };
-
-    return{
-        googleMaps:googleMaps
+        zoom : 16,
+        center : userLatLng,
+        mapTypeId : google.maps.MapTypeId.ROADMAP
     }
 
-})();
+    var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
 
-var yelpApi = (function() {
+    google.maps.event.trigger(map, "resize");
 
-    function yelpSearch(){
-        console.log('yelp');
-    };
+    new google.maps.Marker({
+        map: map,
+        position: userLatLng
+    });
 
-    return{
-        yelpSearch:yelpSearch
-    }
 
-})();
+}
+
+
+

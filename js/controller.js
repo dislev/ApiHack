@@ -5,9 +5,12 @@
 var init = (function(){
 
     function onReady(){
-        //yelpApi.yelpSearch();
-        googleApi.googleMaps();
-    };
+        //$('#map-canvas').hide();
+        //$('#yelp-info').hide();
+
+        getLocation();
+        googleMap();
+    }
 
     return {
         onReady:onReady
