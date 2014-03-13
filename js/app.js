@@ -3,6 +3,9 @@
  */
 var mapFunctions = (function(){
 
+    var webMap;
+    var geocoder = new google.maps.Geocoder();
+
     function getLocation(){
 
         if (navigator.geolocation) {
@@ -18,7 +21,7 @@ var mapFunctions = (function(){
         $('#geolocation').text("{\"Latitude\":"+ lat + "," + "\"Longitude\":" + long +"}");
 
         var userLocation = userLatLng(lat, long);
-        var webMap = googleMap(userLocation);
+        webMap = googleMap(userLocation);
         createLocationMarker(webMap, userLocation);
     }
 
@@ -48,8 +51,34 @@ var mapFunctions = (function(){
         });
     }
 
+    function makePinsFromResults(data){
+        var address;
+
+        for (element in data['businesses']){
+            address = element['display_address'];
+            console.log(address);
+            createPinOnMap(address);
+        }
+    }
+
+    function createPinOnMap(address){
+
+        geocoder.geocode( { 'address': address}, function(results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                new google.maps.Marker({
+                    map: webMap,
+                    position: results[0].geometry.location
+                });
+            }
+            else {
+                alert("Geocode was not successful for the following reason: " + status);
+            }
+        });
+    }
+
     return{
-      getLocation:getLocation
+      getLocation:getLocation,
+      makePinsFromResults:makePinsFromResults
     }
 
 })();
@@ -73,15 +102,16 @@ var yelpFunctions = (function(){
         tokenSecret: auth.accessTokenSecret
     };
 
-    function searchYelp(keyword, jsonCoord, radius){
-
+    function searchYelp(keyword, radius){
+        var coordStr = $('#geolocation').text();
+        var jsonCoord = $.parseJSON(coordStr);
         var x = jsonCoord['Latitude'];
         var y = jsonCoord['Longitude'];
 
         params = [];
-        params.push(['term', keyword]);
+        params.push(['term', 'hooker']);
         params.push(['ll', x + ',' + y]);
-        params.push(['radius_filter', radius]);
+        params.push(['radius_filter', 40000]);
         params.push(['callback', 'cb']);
         params.push(['oauth_consumer_key', auth.consumerKey]);
         params.push(['oauth_consumer_secret', auth.consumerSecret]);
@@ -101,18 +131,23 @@ var yelpFunctions = (function(){
         parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature)
         console.log(parameterMap);
 
-        $.ajax({
+       var yelpResults =  $.ajax({
             'url': message.action,
             'data': parameterMap,
             'cache': true,
             'dataType': 'jsonp',
             'jsonpCallback': 'cb',
-            'success': function(data, textStats, XMLHttpRequest) {
+            'success': function(data){
+                return data;
+            },
+            'error':function(data){
                 console.log(data);
-                var output = JSON.stringify(data);
-                alert(output);
+                alert(JSON.stringify(data));
+                return data;
             }
         });
+
+        return yelpResults;
     }
 
     return{

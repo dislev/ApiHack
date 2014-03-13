@@ -12,28 +12,24 @@ var init = (function(){
         mapFunctions.getLocation();
 
         $('#search-tab').click(function(){
-            $('#user-input-search').show();
-            $('#map-canvas').hide();
-            $('#yelp-info').hide();
-
-            var coordStr = $('#geolocation').text();
-            var coordJson = $.parseJSON(coordStr);
-            yelpFunctions.searchYelp("strip club",coordJson,40000);
+            searchDisplay();
         });
 
         $('#map-tab').click(function(){
-            $('#user-input-search').hide();
-            $('#map-canvas').show();
-            $('#yelp-info').hide();
-
+            mapDisplay();
         });
 
         $('#results-tab').click(function(){
-            $('#user-input-search').hide();
-            $('#map-canvas').hide();
-            $('#yelp-info').show();
-
+            resultsDisplay();
         });
+
+        $('form').submit(function(e){
+            e.preventDefault();
+
+            var yelpResults = yelpFunctions.searchYelp();
+            mapDisplay(yelpResults);
+        });
+
     }
 
     return {
@@ -42,3 +38,31 @@ var init = (function(){
 
 })();
 $(document).ready(init.onReady);
+
+function searchDisplay(){
+    $('#user-input-search').show();
+    $('#map-canvas').hide();
+    $('#yelp-info').hide();
+
+}
+
+function mapDisplay(yelpResults){
+    $('#user-input-search').hide();
+    $('#map-canvas').show();
+    $('#yelp-info').hide();
+
+    $.when(yelpResults).then(function(resp){
+        alert('inside deffered');
+        mapFunctions.makePinsFromResults(resp);
+    });
+
+    alert('outside deffered');
+}
+
+function resultsDisplay(){
+    $('#user-input-search').hide();
+    $('#map-canvas').hide();
+    $('#yelp-info').show();
+
+
+}
