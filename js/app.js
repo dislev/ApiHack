@@ -1,89 +1,86 @@
 /**
  * Created by Soundwave on 2/10/14.
  */
-var mapFunctions = (function(){
 
     var webMap;
-    var geocoder = new google.maps.Geocoder();
+    var lat;
+    var long;
+    var myIcon = L.icon({
+        iconUrl: 'framework/viewer.png',
+        iconSize: [38, 95],
+        iconAnchor: [22, 94],
+        popupAnchor: [-3, -76]
+    });
 
     function getLocation(){
 
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(getPos, onError);
+            var deferred = $.Deferred();
+
+            navigator.geolocation.getCurrentPosition(deferred.resolve, deferred.reject);
+
+            $.when(deferred).then(function(resp){
+                getPos(resp);
+            });
         }
 
      }
 
     function getPos(position){
-        var lat = position.coords.latitude;
-        var long = position.coords.longitude;
-
-        $('#geolocation').text("{\"Latitude\":"+ lat + "," + "\"Longitude\":" + long +"}");
-
-        var userLocation = userLatLng(lat, long);
-        webMap = googleMap(userLocation);
-        createLocationMarker(webMap, userLocation);
+        lat = position.coords.latitude;
+        long = position.coords.longitude;
     }
 
-    function onError(){
-        alert("Browser did not support geolocation");
-    }
+    function createMap(lat, long){
 
-    function googleMap(userLocale){
-
-        var myOptions = {
-            zoom : 16,
-            center : userLocale,
-            mapTypeId : google.maps.MapTypeId.ROADMAP
-        };
-
-        return new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-    }
-
-    function userLatLng(latitude, longitude){
-        return  new google.maps.LatLng(latitude, longitude);
-    }
-
-    function createLocationMarker(mapObj, userLocale){
-        new google.maps.Marker({
-            map: mapObj,
-            position: userLocale
+        var map = L.map('map-canvas', {
+            center: [lat, long],
+            zoom: 16
         });
+
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        webMap = map;
     }
 
-    function makePinsFromResults(data){
-        var address;
-
-        for (element in data['businesses']){
-            address = element['display_address'];
-            console.log(address);
-            createPinOnMap(address);
+    function createLocationMarker(lat, long, icon){
+        if(icon != null){
+            L.marker([lat, long],{icon: icon}).addTo(webMap);
+        }
+        else{
+            L.marker([lat, long]).addTo(webMap);
         }
     }
 
-    function createPinOnMap(address){
+    function makePinsFromResults(data){
+        var businesses = data['businesses'];
+        var name;
+        var location;
+        var businessArr;
 
-        geocoder.geocode( { 'address': address}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                new google.maps.Marker({
-                    map: webMap,
-                    position: results[0].geometry.location
-                });
-            }
-            else {
-                alert("Geocode was not successful for the following reason: " + status);
-            }
+        for (var i in data['businesses']){
+            location = businesses[i].location;
+            name = businesses[i].name;
+            businessArr = [name, location.address[0], location.city, location.state_code, location.postal_code];
+
+            console.log(businessArr);
+            createPinOnMap(businessArr);
+        }
+    }
+
+    function createPinOnMap(business){
+        var respObj;
+        var businessLoc =  $.getJSON(
+            "http://nominatim.openstreetmap.org/search/" + business[1] +","+ business[2] +","+ business[3] +","+ business[4]+"?format=json"
+        );
+
+        $.when(businessLoc).then(function(resp){
+            respObj = resp[0];
+            createLocationMarker(respObj['lat'], respObj['lon'], null)
         });
     }
-
-    return{
-      getLocation:getLocation,
-      makePinsFromResults:makePinsFromResults
-    }
-
-})();
-
-var yelpFunctions = (function(){
 
     var yelpApiEndPoint = "http://api.yelp.com/v2/search";
 
@@ -103,14 +100,10 @@ var yelpFunctions = (function(){
     };
 
     function searchYelp(keyword, radius){
-        var coordStr = $('#geolocation').text();
-        var jsonCoord = $.parseJSON(coordStr);
-        var x = jsonCoord['Latitude'];
-        var y = jsonCoord['Longitude'];
 
         params = [];
-        params.push(['term', 'hooker']);
-        params.push(['ll', x + ',' + y]);
+        params.push(['term', 'bakery']);
+        params.push(['ll', lat + ',' + long]);
         params.push(['radius_filter', 40000]);
         params.push(['callback', 'cb']);
         params.push(['oauth_consumer_key', auth.consumerKey]);
@@ -138,21 +131,16 @@ var yelpFunctions = (function(){
             'dataType': 'jsonp',
             'jsonpCallback': 'cb',
             'success': function(data){
+                console.log(data);
                 return data;
             },
             'error':function(data){
                 console.log(data);
-                alert(JSON.stringify(data));
                 return data;
             }
         });
 
         return yelpResults;
     }
-
-    return{
-        searchYelp:searchYelp
-    }
-})();
 
 

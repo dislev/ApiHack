@@ -5,18 +5,16 @@
 var init = (function(){
 
     function onReady(){
-        $('#user-input-search').hide();
-        $('#map-canvas').hide();
-        $('#yelp-info').hide();
+        $('#user-input-search, #map-canvas, #yelp-info').hide();
 
-        mapFunctions.getLocation();
+        getLocation();
 
         $('#search-tab').click(function(){
             searchDisplay();
         });
 
         $('#map-tab').click(function(){
-            mapDisplay();
+            mapDisplay(null);
         });
 
         $('#results-tab').click(function(){
@@ -26,7 +24,7 @@ var init = (function(){
         $('form').submit(function(e){
             e.preventDefault();
 
-            var yelpResults = yelpFunctions.searchYelp();
+            var yelpResults = searchYelp(null, null);
             mapDisplay(yelpResults);
         });
 
@@ -41,28 +39,34 @@ $(document).ready(init.onReady);
 
 function searchDisplay(){
     $('#user-input-search').show();
-    $('#map-canvas').hide();
-    $('#yelp-info').hide();
+    $('#map-canvas, #yelp-info').hide();
+
+    $('#geolocation').text('Lat: '+ lat + '\n' + 'Long: ' + long);
 
 }
 
 function mapDisplay(yelpResults){
-    $('#user-input-search').hide();
-    $('#map-canvas').show();
-    $('#yelp-info').hide();
+    $('#user-input-search, #yelp-info').hide();
 
-    $.when(yelpResults).then(function(resp){
-        alert('inside deffered');
-        mapFunctions.makePinsFromResults(resp);
+    $('#map-canvas').show(function(){
+
+        if(webMap == null){
+            createMap(lat, long);
+        }
+
+        createLocationMarker(lat, long, myIcon);
+
+        if(yelpResults != null){
+            $.when(yelpResults).then(function(resp){
+                makePinsFromResults(resp);
+            });
+        }
     });
-
-    alert('outside deffered');
 }
 
 function resultsDisplay(){
-    $('#user-input-search').hide();
-    $('#map-canvas').hide();
     $('#yelp-info').show();
+    $('#map-canvas, #user-input-search').hide();
 
 
 }
