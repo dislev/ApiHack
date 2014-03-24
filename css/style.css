@@ -22,3 +22,10 @@ html,body{
 #map{
     margin-top:2.5%;
 }
+
+li {
+    pointer-events: auto;
+}
+li.active {
+    pointer-events: none;
+}

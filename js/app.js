@@ -5,12 +5,7 @@
     var webMap;
     var lat;
     var long;
-    var myIcon = L.icon({
-        iconUrl: 'framework/viewer.png',
-        iconSize: [38, 95],
-        iconAnchor: [22, 94],
-        popupAnchor: [-3, -76]
-    });
+    var marker;
 
     function getLocation(){
 
@@ -45,27 +40,26 @@
         webMap = map;
     }
 
-    function createLocationMarker(lat, long, icon){
-        if(icon != null){
-            L.marker([lat, long],{icon: icon}).addTo(webMap);
-        }
-        else{
-            L.marker([lat, long]).addTo(webMap);
-        }
+    function createLocationMarker(lat, long, name, web){
+
+        marker = L.marker([lat, long],{title:name, riseOnHover:true});
+        marker.addTo(webMap);
+        marker.bindPopup("\<a href='"+ web +"'>"+name+"\</a>");
     }
 
     function makePinsFromResults(data){
         var businesses = data['businesses'];
         var name;
         var location;
+        var url;
         var businessArr;
 
         for (var i in data['businesses']){
             location = businesses[i].location;
             name = businesses[i].name;
-            businessArr = [name, location.address[0], location.city, location.state_code, location.postal_code];
+            url = businesses[i].url;
+            businessArr = [name, location.address[0], location.city, location.state_code, location.postal_code, url];
 
-            console.log(businessArr);
             createPinOnMap(businessArr);
         }
     }
@@ -78,8 +72,10 @@
 
         $.when(businessLoc).then(function(resp){
             respObj = resp[0];
-            createLocationMarker(respObj['lat'], respObj['lon'], null)
+            createLocationMarker(respObj['lat'], respObj['lon'], business[0], business[5]);
         });
+
+        populateResultsInList(business);
     }
 
     var yelpApiEndPoint = "http://api.yelp.com/v2/search";
@@ -104,7 +100,7 @@
         params = [];
         params.push(['term', 'bakery']);
         params.push(['ll', lat + ',' + long]);
-        params.push(['radius_filter', 40000]);
+        params.push(['radius_filter', 5000]);
         params.push(['callback', 'cb']);
         params.push(['oauth_consumer_key', auth.consumerKey]);
         params.push(['oauth_consumer_secret', auth.consumerSecret]);
@@ -142,5 +138,14 @@
 
         return yelpResults;
     }
+
+function populateResultsInList(business){
+    $('ol').append("\<li>\<a href=" + business[5] + ">"
+        + business[0] + ", "
+        + business[1] + ", "
+        + business[2] + ", "
+        + business[3] + ", "
+        + business[4] + "\</a>\</li>")
+}
 
 

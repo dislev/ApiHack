@@ -5,7 +5,8 @@
 var init = (function(){
 
     function onReady(){
-        $('#user-input-search, #map-canvas, #yelp-info').hide();
+        $('#map, #results').hide();
+        $('#search').show();
 
         getLocation();
 
@@ -25,9 +26,16 @@ var init = (function(){
             e.preventDefault();
 
             var yelpResults = searchYelp(null, null);
+            $('#search-tab').removeClass("active");
+            $('#map-tab').addClass("active");
             mapDisplay(yelpResults);
         });
 
+        if (marker != null){
+            marker.on('click', function() {
+                maker.openPopup();
+            });
+        }
     }
 
     return {
@@ -38,23 +46,22 @@ var init = (function(){
 $(document).ready(init.onReady);
 
 function searchDisplay(){
-    $('#user-input-search').show();
-    $('#map-canvas, #yelp-info').hide();
+    $('#search').show();
+    $('#map, #results').hide();
 
     $('#geolocation').text('Lat: '+ lat + '\n' + 'Long: ' + long);
-
 }
 
 function mapDisplay(yelpResults){
-    $('#user-input-search, #yelp-info').hide();
+    $('#search, #results').hide();
 
-    $('#map-canvas').show(function(){
+    $('#map').show(function(){
 
         if(webMap == null){
             createMap(lat, long);
         }
 
-        createLocationMarker(lat, long, myIcon);
+        createLocationMarker(lat, long, 'Current Location', '');
 
         if(yelpResults != null){
             $.when(yelpResults).then(function(resp){
@@ -65,8 +72,6 @@ function mapDisplay(yelpResults){
 }
 
 function resultsDisplay(){
-    $('#yelp-info').show();
-    $('#map-canvas, #user-input-search').hide();
-
-
+    $('#results').show();
+    $('#map, #search').hide();
 }
