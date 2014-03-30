@@ -4,6 +4,8 @@
 
 var init = (function(){
 
+    var DEFAULT_RADIUS = 10;
+
     function onReady(){
         $('#map, #results').hide();
         $('#search').show();
@@ -24,11 +26,23 @@ var init = (function(){
 
         $('form').submit(function(e){
             e.preventDefault();
+            var keyword = $('#criteria').val();
+            var radius = $('#radius').val();
 
-            var yelpResults = searchYelp(null, null);
-            $('#search-tab').removeClass("active");
-            $('#map-tab').addClass("active");
-            mapDisplay(yelpResults);
+            if (radius == ""){
+                radius = DEFAULT_RADIUS;
+            }
+
+            if(keyword != ""){
+                var yelpResults = searchYelp(keyword, radius);
+                $('#search-tab').removeClass("active");
+                $('#map-tab').addClass("active");
+                mapDisplay(yelpResults);
+            }
+            else{
+                $('#criteria').effect( "pulsate" );
+                $('#criteria').attr('placeholder', "Enter a Valid Value");
+            }
         });
 
         if (marker != null){
