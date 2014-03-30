@@ -42,7 +42,18 @@
 
     function createLocationMarker(lat, long, name, web){
 
-        marker = L.marker([lat, long],{title:name, riseOnHover:true});
+        if(name == 'Current Location'){
+            var redMarker = L.AwesomeMarkers.icon({
+                icon: 'home',
+                markerColor: 'red'
+            });
+
+            marker = L.marker([lat, long],{title:name, riseOnHover:true, icon: redMarker});
+        }
+        else{
+            marker = L.marker([lat, long],{title:name, riseOnHover:true});
+        }
+
         marker.addTo(webMap);
         marker.bindPopup("\<a href='"+ web +"'>"+name+"\</a>");
     }
@@ -95,57 +106,85 @@
         tokenSecret: auth.accessTokenSecret
     };
 
+    function milesToMeters(miles){
+        return miles * 1609.34;
+    }
+
     function searchYelp(keyword, radius){
 
-        params = [];
-        params.push(['term', 'bakery']);
-        params.push(['ll', lat + ',' + long]);
-        params.push(['radius_filter', 5000]);
-        params.push(['callback', 'cb']);
-        params.push(['oauth_consumer_key', auth.consumerKey]);
-        params.push(['oauth_consumer_secret', auth.consumerSecret]);
-        params.push(['oauth_token', auth.accessToken]);
-        params.push(['oauth_signature_method', 'HMAC-SHA1']);
+       var radiusInMeters = milesToMeters(radius);
 
-        var message = {
-            action: yelpApiEndPoint,
-            method: 'GET',
-            parameters: params
-        };
+        if(radiusInMeters > 40000){
+            radiusInMeters = 40000;
+        }
 
-        OAuth.setTimestampAndNonce(message);
-        OAuth.SignatureMethod.sign(message, accessor);
+        if(keyword != null){
+            params = [];
+            params.push(['term', keyword]);
+            params.push(['ll', lat + ',' + long]);
+            params.push(['radius_filter', radiusInMeters]);
+            params.push(['callback', 'cb']);
+            params.push(['oauth_consumer_key', auth.consumerKey]);
+            params.push(['oauth_consumer_secret', auth.consumerSecret]);
+            params.push(['oauth_token', auth.accessToken]);
+            params.push(['oauth_signature_method', 'HMAC-SHA1']);
 
-        var parameterMap = OAuth.getParameterMap(message.parameters);
-        parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature)
-        console.log(parameterMap);
+            var message = {
+                action: yelpApiEndPoint,
+                method: 'GET',
+                parameters: params
+            };
 
-       var yelpResults =  $.ajax({
-            'url': message.action,
-            'data': parameterMap,
-            'cache': true,
-            'dataType': 'jsonp',
-            'jsonpCallback': 'cb',
-            'success': function(data){
-                console.log(data);
-                return data;
-            },
-            'error':function(data){
-                console.log(data);
-                return data;
-            }
-        });
+            OAuth.setTimestampAndNonce(message);
+            OAuth.SignatureMethod.sign(message, accessor);
 
-        return yelpResults;
+            var parameterMap = OAuth.getParameterMap(message.parameters);
+            parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature)
+            console.log(parameterMap);
+
+           var yelpResults =  $.ajax({
+                'url': message.action,
+                'data': parameterMap,
+                'cache': true,
+                'dataType': 'jsonp',
+                'jsonpCallback': 'cb',
+                'success': function(data){
+                    console.log(data);
+                    return data;
+                },
+                'error':function(data){
+                    console.log(data);
+                    return data;
+                }
+            });
+
+            return yelpResults;
+        }
+        return null;
     }
 
 function populateResultsInList(business){
-    $('ol').append("\<li>\<a href=" + business[5] + ">"
-        + business[0] + ", "
-        + business[1] + ", "
-        + business[2] + ", "
-        + business[3] + ", "
-        + business[4] + "\</a>\</li>")
+
+    $('.search_list').empty();
+
+    $.get('/ApiHack/etc/result_node.html', function(results) {
+        var template = $(results).clone();
+
+        $(template).find('img').attr('src', 'http://immediatenet.com/t/m?Size=1024x768&URL='+ business[5] +'/');
+        $(template).find('a').attr('href', business[5]);
+        $(template).find('h4').text(business[0]);
+        $(template).find('cite').attr('title', business[2] + ',' + business[3]);
+        $(template).find('cite').text(business[2] + ',' + business[3]);
+
+        if(business[1] != undefined){
+            $(template).find('p i:nth-child(1)').text(' ' + business[1] + ' ' + business[2] + ',' + business[3] + ' ' + business[4]);
+        }
+        else{
+            $(template).find('p i:nth-child(1)').text(' Unable to Obtain Address');
+        }
+
+        $('.search_list').append(template);
+    });
 }
 
 
