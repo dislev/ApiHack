@@ -165,7 +165,7 @@
 
 function populateResultsInList(business){
 
-    $('.search_list').empty();
+    $('.row').empty();
 
     $.get('/ApiHack/etc/result_node.html', function(results) {
         var template = $(results).clone();
@@ -183,7 +183,7 @@ function populateResultsInList(business){
             $(template).find('p i:nth-child(1)').text(' Unable to Obtain Address');
         }
 
-        $('.search_list').append(template);
+        $('.row').append(template);
     });
 }
 
